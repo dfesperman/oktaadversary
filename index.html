@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - Okta</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            background-color: #ffffff;
+            color: #000;
+            line-height: 1.5;
+        }
+
+        /* Training Banner */
+        .training-banner {
+            background: #dc3545;
+            color: white;
+            padding: 24px 20px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 13px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .training-banner img {
+            height: 52px;
+            width: auto;
+            vertical-align: middle;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 100px);
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            border: 1px solid #ddd;
+            padding: 42px;
+            width: 100%;
+            max-width: 398px;
+        }
+
+        /* Logo */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 36px;
+            font-weight: 700;
+            color: #007dc1;
+            letter-spacing: -1px;
+        }
+
+        .logo-subtitle {
+            font-size: 12px;
+            color: #777;
+            margin-top: 5px;
+        }
+
+        /* Form */
+        .login-form {
+            margin-top: 30px;
+        }
+
+        .form-title {
+            font-size: 22px;
+            font-weight: 400;
+            color: #000;
+            margin-bottom: 4px;
+            text-align: center;
+            padding-bottom: 20px;
+        }
+
+        .form-subtitle {
+            font-size: 13px;
+            color: #5e5e5e;
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1px solid #d8d8d8;
+            border-radius: 3px;
+            background: #fff;
+            transition: border-color 0.15s ease-in-out;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #007dc1;
+            box-shadow: 0 0 4px rgba(0, 125, 193, 0.15);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .forgot-password {
+            color: #007dc1;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .sign-in-button {
+            width: 100%;
+            height: 50px;
+            padding: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(#007dc1, #0073b2);
+            border: none;
+            border-bottom: 1px solid #004b75;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background 0.15s ease-in-out;
+            box-shadow: rgba(0, 0, 0, 0.15) 0 1px 0, inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .sign-in-button:hover {
+            background: linear-gradient(#006ba6, #00629a);
+        }
+
+        .sign-in-button:active {
+            transform: translateY(1px);
+            box-shadow: none;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 25px 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: #ddd;
+        }
+
+        .divider span {
+            position: relative;
+            background: white;
+            padding: 0 12px;
+            color: #5e5e5e;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .social-login {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .social-button {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #000;
+            background: white;
+            border: 1px solid #d8d8d8;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background 0.15s ease-in-out, border-color 0.15s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .social-button:hover {
+            background: #f9f9f9;
+            border-color: #bbb;
+        }
+
+        .help-links {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .help-links a {
+            color: #007dc1;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .help-links a:hover {
+            text-decoration: underline;
+        }
+
+        .admin-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            transition: all 0.3s;
+        }
+
+        .admin-link:hover {
+            background: #218838;
+            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 12px;
+            border-radius: 3px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .login-container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="training-banner">
+        <img src="icon.png" alt="Okta Icon">
+        OktaAdversary: Identity Attack Simulation - This is for demonstration purposes. Do not user real credentials.
+    </div>
+
+    <div class="container">
+        <div class="login-container">
+            <div class="logo-container">
+                <div class="logo">Okta</div>
+                <div class="logo-subtitle">One platform. Neutral. Connected.</div>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                ✓ Credentials captured for training demonstration!
+            </div>
+
+            <form class="login-form" id="loginForm">
+                <h1 class="form-title">Sign In</h1>
+                <p class="form-subtitle">to continue to Environment Demo</p>
+
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="Enter your username"
+                        autocomplete="username"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" name="remember" id="remember">
+                        <span>Remember me</span>
+                    </label>
+                    <a href="#" class="forgot-password">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="sign-in-button">Sign In</button>
+
+                <div class="divider">
+                    <span>OR</span>
+                </div>
+
+                <div class="social-login">
+                    <button type="button" class="social-button">
+                        <span>🔷</span>
+                        Sign in with Google
+                    </button>
+                    <button type="button" class="social-button">
+                        <span>🔵</span>
+                        Sign in with Microsoft
+                    </button>
+                </div>
+
+                <div class="help-links">
+                    <a href="#">Help</a>
+                    <span>|</span>
+                    <a href="#">Privacy</a>
+                    <span>|</span>
+                    <a href="#">Legal</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <a href="admin.html" class="admin-link">👤 View Admin Panel</a>
+
+    <script>
+        // Simulated credential harvesting for training purposes
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+            const timestamp = new Date().toISOString();
+
+            // Capture the credential data
+            const capturedData = {
+                username: username,
+                password: password,
+                remember: remember,
+                timestamp: timestamp,
+                userAgent: navigator.userAgent,
+                ipSimulated: '192.168.1.' + Math.floor(Math.random() * 255), // Simulated IP
+                location: 'Simulated Location'
+            };
+
+            // Store in localStorage (simulating backend storage)
+            let storedCredentials = JSON.parse(localStorage.getItem('capturedCredentials') || '[]');
+            storedCredentials.push(capturedData);
+            localStorage.setItem('capturedCredentials', JSON.stringify(storedCredentials));
+
+            // Show success message
+            const successMsg = document.getElementById('successMessage');
+            successMsg.style.display = 'block';
+
+            // Clear form
+            document.getElementById('loginForm').reset();
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 5000);
+        });
+
+        // Prevent social login buttons from doing anything
+        document.querySelectorAll('.social-button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('This is a training simulation. Social login is not functional.');
+            });
+        });
+
+        // Prevent help links from navigating
+        document.querySelectorAll('.help-links a, .forgot-password').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('This is a training simulation. This link is not functional.');
+            });
+        });
+
+        // Check for custom target URL configuration
+        function loadCustomConfiguration() {
+            const targetUrl = localStorage.getItem('phishingTargetUrl');
+
+            if (targetUrl) {
+                try {
+                    // Extract domain name from URL
+                    const url = new URL(targetUrl);
+                    const domain = url.hostname.replace('www.', '');
+
+                    // Update the subtitle to reference the target domain
+                    const subtitle = document.querySelector('.form-subtitle');
+                    if (subtitle) {
+                        // Extract the first part of the domain or organization name
+                        const domainParts = domain.split('.');
+                        let orgName = domainParts[0];
+
+                        // Capitalize first letter
+                        orgName = orgName.charAt(0).toUpperCase() + orgName.slice(1);
+
+                        subtitle.textContent = `to continue to ${orgName}`;
+                    }
+
+                    // Update page title
+                    document.title = `Sign In - ${domain}`;
+
+                    console.log('Phishing page configured to model:', targetUrl);
+                } catch (e) {
+                    console.error('Error parsing target URL:', e);
+                }
+            }
+        }
+
+        // Load custom configuration on page load
+        loadCustomConfiguration();
+    </script>
+</body>
+</html>
