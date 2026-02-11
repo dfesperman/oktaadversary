@@ -650,6 +650,17 @@
             }
         }
 
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
         @media (max-width: 768px) {
             .header-title {
                 font-size: 24px;
@@ -696,20 +707,17 @@
                     <span class="sidebar-item-icon">🎣</span>
                     <span class="sidebar-item-text">Adversary-in-the-Middle</span>
                 </div>
+                <div class="sidebar-item" onclick="showTab('session-hijacking')">
+                    <span class="sidebar-item-icon">🔓</span>
+                    <span class="sidebar-item-text">Session Hijacking</span>
+                </div>
                 <div class="sidebar-item" onclick="showTab('credential-stuffing')">
                     <span class="sidebar-item-icon">🔑</span>
                     <span class="sidebar-item-text">Credential Stuffing & Password Spraying</span>
-                    <span class="sidebar-badge">Soon</span>
                 </div>
                 <div class="sidebar-item" onclick="showTab('mfa-fatigue')">
                     <span class="sidebar-item-icon">📱</span>
                     <span class="sidebar-item-text">MFA Fatigue</span>
-                    <span class="sidebar-badge">Soon</span>
-                </div>
-                <div class="sidebar-item" onclick="showTab('session-hijacking')">
-                    <span class="sidebar-item-icon">🔓</span>
-                    <span class="sidebar-item-text">Session Hijacking</span>
-                    <span class="sidebar-badge">Soon</span>
                 </div>
             </div>
         </div>
@@ -795,6 +803,7 @@
                         <th>Timestamp</th>
                         <th>Username</th>
                         <th>Password</th>
+                        <th>MFA Code</th>
                         <th>Remember Me</th>
                         <th>User Agent</th>
                         <th>Simulated IP</th>
@@ -815,43 +824,497 @@
 
             <!-- Credential Stuffing & Password Spraying Tab -->
             <div id="tab-credential-stuffing" class="tab-content">
-                <div class="coming-soon-container">
-                    <div class="coming-soon-icon">🔑</div>
-                    <h2 class="coming-soon-title">Credential Stuffing & Password Spraying</h2>
-                    <p class="coming-soon-text">
-                        This attack simulation demonstrates how threat actors use stolen credentials from data breaches
-                        to attempt unauthorized access across multiple accounts (credential stuffing) or use common
-                        passwords against many accounts (password spraying).
-                    </p>
-                    <div class="coming-soon-badge">Coming Soon</div>
+                <div class="warning-banner">
+                    ⚠️ TRAINING ENVIRONMENT ONLY - Demonstrates automated credential testing attacks
+                </div>
+
+                <!-- Target URL Configuration -->
+                <div class="config-panel">
+                    <div class="config-title">
+                        <span>🎯</span>
+                        Target Configuration
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #e0e0e0;">
+                            Target URL
+                        </label>
+                        <input
+                            type="url"
+                            id="credStuffingTargetUrl"
+                            class="config-input"
+                            placeholder="https://login.example.com"
+                            value="https://login.okta.com"
+                        >
+                        <p style="color: #7b7b8c; font-size: 12px; margin-top: 8px;">
+                            Specify the authentication endpoint you are targeting with this attack
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Attack Mode Selector -->
+                <div class="config-panel">
+                    <div class="config-title">
+                        <span>🔑</span>
+                        Attack Mode Selection
+                    </div>
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                        <button id="btnCredentialStuffing" class="btn-update" onclick="setAttackMode('credential-stuffing')" style="flex: 1;">
+                            <span>📋</span>
+                            Credential Stuffing
+                        </button>
+                        <button id="btnPasswordSpraying" class="btn-export" onclick="setAttackMode('password-spraying')" style="flex: 1;">
+                            <span>💧</span>
+                            Password Spraying
+                        </button>
+                    </div>
+                    <div id="attackModeDescription" style="background: rgba(30, 30, 60, 0.5); padding: 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); color: #b0b0c0; font-size: 13px; line-height: 1.6;">
+                        Select an attack mode above to begin
+                    </div>
+                </div>
+
+                <!-- Credential Stuffing Mode -->
+                <div id="credentialStuffingMode" style="display: none;">
+                    <div class="config-panel">
+                        <div class="config-title">
+                            <span>📋</span>
+                            Credential Stuffing Attack
+                        </div>
+                        <p style="color: #b0b0c0; margin-bottom: 20px; line-height: 1.6;">
+                            Test a list of breached credentials against the target system. Each line should contain username:password pairs.
+                        </p>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #e0e0e0;">
+                                Credential List (username:password per line)
+                            </label>
+                            <textarea
+                                id="credentialList"
+                                class="config-input"
+                                placeholder="user1@example.com:Password123&#10;user2@example.com:qwerty2024&#10;admin@example.com:Admin@2024"
+                                style="min-height: 150px; font-family: 'Courier New', monospace; resize: vertical;"
+                            ></textarea>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn-update" onclick="startCredentialStuffing()">
+                                <span>🚀</span>
+                                Start Attack
+                            </button>
+                            <button class="btn-export" onclick="loadSampleCredentials()">
+                                <span>📥</span>
+                                Load Sample Data
+                            </button>
+                            <button class="btn-clear" onclick="clearCredentialStuffing()">
+                                <span>🗑️</span>
+                                Clear
+                            </button>
+                        </div>
+
+                        <div class="config-status" id="csStatus"></div>
+                    </div>
+                </div>
+
+                <!-- Password Spraying Mode -->
+                <div id="passwordSprayingMode" style="display: none;">
+                    <div class="config-panel">
+                        <div class="config-title">
+                            <span>💧</span>
+                            Password Spraying Attack
+                        </div>
+                        <p style="color: #b0b0c0; margin-bottom: 20px; line-height: 1.6;">
+                            Test common passwords against multiple user accounts to avoid account lockouts.
+                        </p>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #e0e0e0;">
+                                Target Usernames (one per line)
+                            </label>
+                            <textarea
+                                id="targetUsernames"
+                                class="config-input"
+                                placeholder="user1@example.com&#10;admin@example.com&#10;john.doe@example.com"
+                                style="min-height: 120px; font-family: 'Courier New', monospace; resize: vertical;"
+                            ></textarea>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #e0e0e0;">
+                                Common Passwords to Test
+                            </label>
+                            <textarea
+                                id="commonPasswords"
+                                class="config-input"
+                                placeholder="Password123&#10;Summer2024&#10;Welcome1"
+                                style="min-height: 120px; font-family: 'Courier New', monospace; resize: vertical;"
+                            ></textarea>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn-update" onclick="startPasswordSpraying()">
+                                <span>🚀</span>
+                                Start Attack
+                            </button>
+                            <button class="btn-export" onclick="loadCommonPasswords()">
+                                <span>📥</span>
+                                Load Top Passwords
+                            </button>
+                            <button class="btn-clear" onclick="clearPasswordSpraying()">
+                                <span>🗑️</span>
+                                Clear
+                            </button>
+                        </div>
+
+                        <div class="config-status" id="psStatus"></div>
+                    </div>
+                </div>
+
+                <!-- Attack Progress -->
+                <div id="attackProgress" style="display: none;">
+                    <div class="config-panel">
+                        <div class="config-title">
+                            <span>⏳</span>
+                            Attack in Progress
+                        </div>
+                        <div style="background: rgba(30, 30, 60, 0.5); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                            <div style="margin-bottom: 15px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span style="color: #b0b0c0;">Progress</span>
+                                    <span style="color: #00d4ff; font-weight: 600;" id="progressText">0 / 0</span>
+                                </div>
+                                <div style="background: rgba(10, 10, 25, 0.6); height: 20px; border-radius: 10px; overflow: hidden;">
+                                    <div id="progressBar" style="background: linear-gradient(90deg, #00d4ff, #7b2ff7); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                                </div>
+                            </div>
+                            <div style="color: #ffd43b; font-size: 13px; text-align: center;" id="progressStatus">Initializing attack...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalAttempts">0</div>
+                        <div class="stat-label">Total Attempts</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="successfulBreaches">0</div>
+                        <div class="stat-label">Successful Breaches</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="successRate">0%</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                </div>
+
+                <!-- Results Table -->
+                <div class="table-container">
+                    <h3 style="color: #e0e0e0; font-size: 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                        <span>📊</span>
+                        Attack Results
+                    </h3>
+                    <table id="attackResultsTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Timestamp</th>
+                                <th>Target URL</th>
+                                <th>Username</th>
+                                <th>Password</th>
+                                <th>Attack Type</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attackResultsBody">
+                            <!-- Data will be inserted here -->
+                        </tbody>
+                    </table>
+                    <div class="empty-state" id="attackEmptyState">
+                        <div class="empty-state-icon">🔑</div>
+                        <div class="empty-state-text">No attacks executed yet</div>
+                        <div class="empty-state-subtext">Select an attack mode and configure the parameters to begin</div>
+                    </div>
                 </div>
             </div>
 
             <!-- MFA Fatigue Tab -->
             <div id="tab-mfa-fatigue" class="tab-content">
-                <div class="coming-soon-container">
-                    <div class="coming-soon-icon">📱</div>
-                    <h2 class="coming-soon-title">MFA Fatigue Attack</h2>
-                    <p class="coming-soon-text">
-                        This simulation shows how attackers exploit multi-factor authentication by bombarding users
-                        with repeated MFA push notifications until they approve one out of frustration or confusion,
-                        granting the attacker access to their account.
+                <div class="warning-banner">
+                    ⚠️ TRAINING ENVIRONMENT ONLY - Demonstrates MFA push notification bombardment attacks
+                </div>
+
+                <div class="config-panel">
+                    <div class="config-title">
+                        <span>📱</span>
+                        MFA Fatigue Attack Configuration
+                    </div>
+                    <p style="color: #b0b0c0; margin-bottom: 20px; line-height: 1.6;">
+                        This attack exploits user frustration by sending multiple MFA push notifications in quick succession,
+                        hoping the victim will approve one to stop the bombardment.
                     </p>
-                    <div class="coming-soon-badge">Coming Soon</div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #e0e0e0;">
+                            Target URL
+                        </label>
+                        <input
+                            type="url"
+                            id="mfaTargetUrl"
+                            class="config-input"
+                            placeholder="https://login.example.com"
+                            value="https://login.okta.com"
+                        >
+                        <p style="color: #7b7b8c; font-size: 12px; margin-top: 8px;">
+                            The authentication service being targeted with MFA push notifications
+                        </p>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #e0e0e0;">
+                            Target User
+                        </label>
+                        <input
+                            type="text"
+                            id="mfaTargetUser"
+                            class="config-input"
+                            placeholder="user@example.com"
+                        >
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #e0e0e0;">
+                                Number of Push Attempts
+                            </label>
+                            <input
+                                type="number"
+                                id="pushAttempts"
+                                class="config-input"
+                                placeholder="10"
+                                value="10"
+                                min="1"
+                                max="50"
+                            >
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #e0e0e0;">
+                                Delay Between Pushes (seconds)
+                            </label>
+                            <input
+                                type="number"
+                                id="pushDelay"
+                                class="config-input"
+                                placeholder="3"
+                                value="3"
+                                min="1"
+                                max="30"
+                            >
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #e0e0e0;">
+                            Push Notification Message
+                        </label>
+                        <input
+                            type="text"
+                            id="pushMessage"
+                            class="config-input"
+                            placeholder="Login attempt from New York, NY"
+                            value="Login attempt from New York, NY"
+                        >
+                    </div>
+
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn-update" onclick="startMFAFatigue()" id="startMFABtn">
+                            <span>🚀</span>
+                            Start MFA Bombardment
+                        </button>
+                        <button class="btn-clear" onclick="stopMFAFatigue()" id="stopMFABtn" style="display: none;">
+                            <span>⏹️</span>
+                            Stop Attack
+                        </button>
+                        <button class="btn-clear" onclick="clearMFAFatigue()">
+                            <span>🗑️</span>
+                            Clear
+                        </button>
+                    </div>
+
+                    <div class="config-status" id="mfaStatus"></div>
+                </div>
+
+                <!-- Live Push Notifications Display -->
+                <div id="pushNotificationsContainer" style="display: none;">
+                    <div class="config-panel">
+                        <div class="config-title">
+                            <span>📲</span>
+                            Live Push Notifications
+                        </div>
+                        <div id="pushNotifications" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto;">
+                            <!-- Push notifications will appear here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalPushes">0</div>
+                        <div class="stat-label">Total Push Notifications</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="approvedPushes">0</div>
+                        <div class="stat-label">Approved by User</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="deniedPushes">0</div>
+                        <div class="stat-label">Denied by User</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="ignoredPushes">0</div>
+                        <div class="stat-label">Ignored (Timeout)</div>
+                    </div>
+                </div>
+
+                <!-- Attack History Table -->
+                <div class="table-container">
+                    <h3 style="color: #e0e0e0; font-size: 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                        <span>📜</span>
+                        MFA Attack History
+                    </h3>
+                    <table id="mfaHistoryTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Timestamp</th>
+                                <th>Target URL</th>
+                                <th>Target User</th>
+                                <th>Push Attempts</th>
+                                <th>User Response</th>
+                                <th>Time to Approval</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mfaHistoryBody">
+                            <!-- Data will be inserted here -->
+                        </tbody>
+                    </table>
+                    <div class="empty-state" id="mfaEmptyState">
+                        <div class="empty-state-icon">📱</div>
+                        <div class="empty-state-text">No MFA fatigue attacks yet</div>
+                        <div class="empty-state-subtext">Configure the attack parameters above and click "Start MFA Bombardment"</div>
+                    </div>
                 </div>
             </div>
 
             <!-- Session Hijacking Tab -->
             <div id="tab-session-hijacking" class="tab-content">
-                <div class="coming-soon-container">
-                    <div class="coming-soon-icon">🔓</div>
-                    <h2 class="coming-soon-title">Session Hijacking</h2>
-                    <p class="coming-soon-text">
-                        This demonstration illustrates how attackers steal or manipulate session tokens and cookies
-                        to impersonate legitimate users and gain unauthorized access to their authenticated sessions
-                        without needing credentials.
+                <div class="warning-banner">
+                    ⚠️ TRAINING ENVIRONMENT ONLY - This demonstrates session token replay attacks
+                </div>
+
+                <div class="config-panel">
+                    <div class="config-title">
+                        <span>🔓</span>
+                        Session Cookie Replay Attack
+                    </div>
+                    <p style="color: #b0b0c0; margin-bottom: 20px; line-height: 1.6;">
+                        This demonstration shows how attackers can steal session tokens/cookies and replay them
+                        to impersonate authenticated users without needing their credentials. Paste a captured
+                        session token below to simulate a session hijacking attack.
                     </p>
-                    <div class="coming-soon-badge">Coming Soon</div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #e0e0e0;">
+                            Session Token
+                        </label>
+                        <textarea
+                            id="sessionToken"
+                            class="config-input"
+                            placeholder="Paste session token/cookie here (e.g., sid=abc123xyz...)"
+                            style="min-height: 100px; font-family: 'Courier New', monospace; resize: vertical;"
+                        ></textarea>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #e0e0e0;">
+                            Target User (Optional)
+                        </label>
+                        <input
+                            type="text"
+                            id="targetUser"
+                            class="config-input"
+                            placeholder="e.g., user@example.com"
+                        >
+                    </div>
+
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn-update" onclick="replaySession()">
+                            <span>▶️</span>
+                            Replay Session
+                        </button>
+                        <button class="btn-clear" onclick="clearSessionForm()">
+                            <span>🗑️</span>
+                            Clear
+                        </button>
+                        <button class="btn-export" onclick="generateSampleToken()">
+                            <span>🎲</span>
+                            Generate Sample Token
+                        </button>
+                    </div>
+
+                    <div class="config-status" id="sessionStatus"></div>
+                </div>
+
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalReplays">0</div>
+                        <div class="stat-label">Total Replays</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="successfulReplays">0</div>
+                        <div class="stat-label">Successful Replays</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="lastReplay">Never</div>
+                        <div class="stat-label">Last Replay</div>
+                    </div>
+                </div>
+
+                <div class="table-container" id="replayResultContainer" style="display: none;">
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: #00d4ff; font-size: 18px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            <span>✓</span>
+                            Session Replay Result
+                        </h3>
+                        <div id="replayResult" style="font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.8;"></div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <h3 style="color: #e0e0e0; font-size: 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                        <span>📜</span>
+                        Replay History
+                    </h3>
+                    <table id="sessionHistoryTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Timestamp</th>
+                                <th>Target User</th>
+                                <th>Token Preview</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sessionHistoryBody">
+                            <!-- Data will be inserted here -->
+                        </tbody>
+                    </table>
+                    <div class="empty-state" id="sessionEmptyState">
+                        <div class="empty-state-icon">🔓</div>
+                        <div class="empty-state-text">No session replays yet</div>
+                        <div class="empty-state-subtext">Paste a session token above and click "Replay Session" to simulate a session hijacking attack</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -907,6 +1370,11 @@
                         <td class="timestamp-cell">${formattedDate}</td>
                         <td><span class="username-cell">${escapeHtml(cred.username)}</span></td>
                         <td><span class="password-cell">${escapeHtml(cred.password)}</span></td>
+                        <td>
+                            ${cred.mfaCode
+                                ? `<span style="font-family: 'Courier New', monospace; background: rgba(0, 212, 255, 0.3); padding: 6px 12px; border-radius: 6px; display: inline-block; border: 1px solid rgba(0, 212, 255, 0.4); color: #00d4ff; font-weight: 600;">${escapeHtml(cred.mfaCode)}</span>`
+                                : '<span style="color: #7b7b8c; font-style: italic;">Not captured</span>'}
+                        </td>
                         <td>
                             ${cred.remember
                                 ? '<span class="badge badge-success">Yes</span>'
@@ -986,13 +1454,14 @@
             }
 
             // Create CSV content
-            const headers = ['Timestamp', 'Username', 'Password', 'Remember Me', 'User Agent', 'Simulated IP'];
+            const headers = ['Timestamp', 'Username', 'Password', 'MFA Code', 'Remember Me', 'User Agent', 'Simulated IP'];
             const csvContent = [
                 headers.join(','),
                 ...credentials.map(cred => [
                     new Date(cred.timestamp).toISOString(),
                     `"${cred.username}"`,
                     `"${cred.password}"`,
+                    cred.mfaCode ? `"${cred.mfaCode}"` : 'N/A',
                     cred.remember ? 'Yes' : 'No',
                     `"${cred.userAgent}"`,
                     cred.ipSimulated || 'N/A'
@@ -1070,13 +1539,720 @@
 
         // Load data on page load
         loadCredentials();
+        loadSessionHistory();
 
         // Listen for storage changes (when credentials are captured in another tab)
         window.addEventListener('storage', function(e) {
             if (e.key === 'capturedCredentials') {
                 loadCredentials();
             }
+            if (e.key === 'sessionReplays') {
+                loadSessionHistory();
+            }
         });
+
+        // Session Hijacking Functions
+        function generateSampleToken() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let token = 'sid=';
+            for (let i = 0; i < 64; i++) {
+                token += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            token += '; Path=/; Secure; HttpOnly; SameSite=Strict';
+
+            document.getElementById('sessionToken').value = token;
+            document.getElementById('targetUser').value = 'user@example.com';
+
+            const statusDiv = document.getElementById('sessionStatus');
+            statusDiv.textContent = '✓ Sample session token generated';
+            statusDiv.className = 'config-status success';
+            statusDiv.style.display = 'block';
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function clearSessionForm() {
+            document.getElementById('sessionToken').value = '';
+            document.getElementById('targetUser').value = '';
+            document.getElementById('replayResultContainer').style.display = 'none';
+        }
+
+        function replaySession() {
+            const token = document.getElementById('sessionToken').value.trim();
+            const targetUser = document.getElementById('targetUser').value.trim();
+            const statusDiv = document.getElementById('sessionStatus');
+
+            if (!token) {
+                statusDiv.textContent = '❌ Please enter a session token';
+                statusDiv.className = 'config-status error';
+                statusDiv.style.display = 'block';
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+                return;
+            }
+
+            // Simulate session replay
+            const replayData = {
+                token: token,
+                targetUser: targetUser || 'Unknown User',
+                timestamp: new Date().toISOString(),
+                success: true,
+                sessionInfo: {
+                    authenticatedAs: targetUser || 'Unknown User',
+                    sessionId: extractSessionId(token),
+                    expiresIn: Math.floor(Math.random() * 3600) + 1800, // Random 30-90 mins
+                    permissions: ['read', 'write', 'admin'],
+                    ipAddress: '192.168.1.' + Math.floor(Math.random() * 255),
+                    userAgent: navigator.userAgent
+                }
+            };
+
+            // Store replay in history
+            let replays = JSON.parse(localStorage.getItem('sessionReplays') || '[]');
+            replays.push(replayData);
+            localStorage.setItem('sessionReplays', JSON.stringify(replays));
+
+            // Show success message
+            statusDiv.textContent = '✓ Session successfully replayed! User session hijacked.';
+            statusDiv.className = 'config-status success';
+            statusDiv.style.display = 'block';
+
+            // Display replay result
+            displayReplayResult(replayData);
+
+            // Update history and stats
+            loadSessionHistory();
+
+            // Clear form after 2 seconds
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function extractSessionId(token) {
+            const match = token.match(/sid=([^;]+)/);
+            return match ? match[1].substring(0, 16) + '...' : 'unknown';
+        }
+
+        function displayReplayResult(data) {
+            const container = document.getElementById('replayResultContainer');
+            const resultDiv = document.getElementById('replayResult');
+
+            const expiryTime = new Date(Date.now() + data.sessionInfo.expiresIn * 1000);
+
+            resultDiv.innerHTML = `
+                <div style="background: rgba(40, 167, 69, 0.2); border: 1px solid rgba(40, 167, 69, 0.5); padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="color: #51cf66; font-weight: 600; margin-bottom: 10px;">🎯 Session Hijack Successful</div>
+                    <div style="color: #b0b0c0;">You have successfully impersonated the authenticated user.</div>
+                </div>
+
+                <div style="background: rgba(30, 30, 60, 0.5); padding: 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: #7b7b8c;">Authenticated As:</span>
+                        <span style="color: #00d4ff; font-weight: 600; margin-left: 10px;">${escapeHtml(data.sessionInfo.authenticatedAs)}</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: #7b7b8c;">Session ID:</span>
+                        <span style="color: #ffd43b; margin-left: 10px;">${escapeHtml(data.sessionInfo.sessionId)}</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: #7b7b8c;">Expires In:</span>
+                        <span style="color: #ff6b6b; margin-left: 10px;">${Math.floor(data.sessionInfo.expiresIn / 60)} minutes</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: #7b7b8c;">Expiry Time:</span>
+                        <span style="color: #a0a0b0; margin-left: 10px;">${expiryTime.toLocaleString()}</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: #7b7b8c;">Permissions:</span>
+                        <span style="color: #51cf66; margin-left: 10px;">${data.sessionInfo.permissions.join(', ')}</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: #7b7b8c;">Source IP:</span>
+                        <span style="color: #a0a0b0; margin-left: 10px;">${data.sessionInfo.ipAddress}</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 8px;">
+                    <div style="color: #ffd43b; font-weight: 600; margin-bottom: 8px;">⚠️ Attack Vector Explanation</div>
+                    <div style="color: #b0b0c0; font-size: 12px; line-height: 1.6;">
+                        Session hijacking allows attackers to bypass authentication by stealing or intercepting valid session tokens.
+                        This can be achieved through XSS attacks, network sniffing, malware, or physical access to devices.
+                        Once obtained, the token grants full access to the user's account without requiring credentials.
+                    </div>
+                </div>
+            `;
+
+            container.style.display = 'block';
+            container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function loadSessionHistory() {
+            const replays = JSON.parse(localStorage.getItem('sessionReplays') || '[]');
+            const tbody = document.getElementById('sessionHistoryBody');
+            const emptyState = document.getElementById('sessionEmptyState');
+
+            // Update stats
+            document.getElementById('totalReplays').textContent = replays.length;
+            document.getElementById('successfulReplays').textContent = replays.filter(r => r.success).length;
+
+            if (replays.length > 0) {
+                const lastReplay = new Date(replays[replays.length - 1].timestamp);
+                const now = new Date();
+                const diffMs = now - lastReplay;
+                const diffMins = Math.floor(diffMs / 60000);
+
+                let timeAgo;
+                if (diffMins < 1) {
+                    timeAgo = 'Just now';
+                } else if (diffMins < 60) {
+                    timeAgo = `${diffMins}m ago`;
+                } else if (diffMins < 1440) {
+                    timeAgo = `${Math.floor(diffMins / 60)}h ago`;
+                } else {
+                    timeAgo = `${Math.floor(diffMins / 1440)}d ago`;
+                }
+
+                document.getElementById('lastReplay').textContent = timeAgo;
+                document.getElementById('lastReplay').style.fontSize = '24px';
+            }
+
+            if (replays.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            // Sort by timestamp (newest first)
+            replays.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            tbody.innerHTML = replays.map((replay, index) => {
+                const date = new Date(replay.timestamp);
+                const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                const tokenPreview = extractSessionId(replay.token);
+
+                return `
+                    <tr>
+                        <td>${replays.length - index}</td>
+                        <td class="timestamp-cell">${formattedDate}</td>
+                        <td><span class="username-cell">${escapeHtml(replay.targetUser)}</span></td>
+                        <td style="font-family: 'Courier New', monospace; font-size: 11px; color: #ffd43b;">${escapeHtml(tokenPreview)}</td>
+                        <td>
+                            ${replay.success
+                                ? '<span class="badge badge-success">Success</span>'
+                                : '<span class="badge badge-warning">Failed</span>'}
+                        </td>
+                        <td>
+                            <button onclick="viewReplayDetails(${replays.length - index - 1})" style="padding: 6px 12px; font-size: 11px; background: linear-gradient(135deg, #007bff, #0056b3); color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function viewReplayDetails(index) {
+            const replays = JSON.parse(localStorage.getItem('sessionReplays') || '[]');
+            replays.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            if (index >= 0 && index < replays.length) {
+                displayReplayResult(replays[index]);
+            }
+        }
+
+        // Credential Stuffing & Password Spraying Functions
+        let currentAttackMode = null;
+
+        function setAttackMode(mode) {
+            currentAttackMode = mode;
+
+            // Update button styles
+            const csBtn = document.getElementById('btnCredentialStuffing');
+            const psBtn = document.getElementById('btnPasswordSpraying');
+
+            if (mode === 'credential-stuffing') {
+                csBtn.style.opacity = '1';
+                psBtn.style.opacity = '0.5';
+                document.getElementById('credentialStuffingMode').style.display = 'block';
+                document.getElementById('passwordSprayingMode').style.display = 'none';
+                document.getElementById('attackModeDescription').innerHTML = `
+                    <strong style="color: #00d4ff;">Credential Stuffing:</strong> Tests a list of username:password pairs obtained from data breaches
+                    against the target system. Attackers use this technique because users often reuse passwords across multiple services.
+                `;
+            } else {
+                csBtn.style.opacity = '0.5';
+                psBtn.style.opacity = '1';
+                document.getElementById('credentialStuffingMode').style.display = 'none';
+                document.getElementById('passwordSprayingMode').style.display = 'block';
+                document.getElementById('attackModeDescription').innerHTML = `
+                    <strong style="color: #00d4ff;">Password Spraying:</strong> Tests a small set of common passwords against many user accounts.
+                    This approach avoids account lockouts by attempting only a few passwords per account, staying under typical lockout thresholds.
+                `;
+            }
+        }
+
+        function loadSampleCredentials() {
+            const samples = `john.doe@company.com:Password123
+sarah.smith@company.com:Summer2024!
+admin@company.com:Admin@123
+michael.jones@company.com:Welcome1
+jessica.brown@company.com:Qwerty2024
+david.wilson@company.com:Company2024!`;
+
+            document.getElementById('credentialList').value = samples;
+        }
+
+        function loadCommonPasswords() {
+            const usernames = `john.doe@company.com
+admin@company.com
+sarah.smith@company.com
+michael.jones@company.com
+jessica.brown@company.com`;
+
+            const passwords = `Password123
+Welcome1
+Summer2024
+Company2024
+Qwerty123`;
+
+            document.getElementById('targetUsernames').value = usernames;
+            document.getElementById('commonPasswords').value = passwords;
+        }
+
+        async function startCredentialStuffing() {
+            const credList = document.getElementById('credentialList').value.trim();
+            const targetUrl = document.getElementById('credStuffingTargetUrl').value.trim();
+            const statusDiv = document.getElementById('csStatus');
+
+            if (!targetUrl) {
+                statusDiv.textContent = '❌ Please enter a target URL';
+                statusDiv.className = 'config-status error';
+                statusDiv.style.display = 'block';
+                setTimeout(() => statusDiv.style.display = 'none', 5000);
+                return;
+            }
+
+            if (!credList) {
+                statusDiv.textContent = '❌ Please enter credential pairs';
+                statusDiv.className = 'config-status error';
+                statusDiv.style.display = 'block';
+                setTimeout(() => statusDiv.style.display = 'none', 5000);
+                return;
+            }
+
+            const credentials = credList.split('\n').filter(line => line.includes(':'));
+            if (credentials.length === 0) {
+                statusDiv.textContent = '❌ Invalid format. Use username:password per line';
+                statusDiv.className = 'config-status error';
+                statusDiv.style.display = 'block';
+                setTimeout(() => statusDiv.style.display = 'none', 5000);
+                return;
+            }
+
+            statusDiv.textContent = `✓ Attack started against ${targetUrl}...`;
+            statusDiv.className = 'config-status success';
+            statusDiv.style.display = 'block';
+
+            document.getElementById('attackProgress').style.display = 'block';
+            await simulateAttack(credentials, 'credential-stuffing', targetUrl);
+
+            setTimeout(() => statusDiv.style.display = 'none', 3000);
+        }
+
+        async function startPasswordSpraying() {
+            const targetUrl = document.getElementById('credStuffingTargetUrl').value.trim();
+            const usernames = document.getElementById('targetUsernames').value.trim().split('\n').filter(u => u);
+            const passwords = document.getElementById('commonPasswords').value.trim().split('\n').filter(p => p);
+            const statusDiv = document.getElementById('psStatus');
+
+            if (!targetUrl) {
+                statusDiv.textContent = '❌ Please enter a target URL';
+                statusDiv.className = 'config-status error';
+                statusDiv.style.display = 'block';
+                setTimeout(() => statusDiv.style.display = 'none', 5000);
+                return;
+            }
+
+            if (!usernames.length || !passwords.length) {
+                statusDiv.textContent = '❌ Please enter both usernames and passwords';
+                statusDiv.className = 'config-status error';
+                statusDiv.style.display = 'block';
+                setTimeout(() => statusDiv.style.display = 'none', 5000);
+                return;
+            }
+
+            statusDiv.textContent = `✓ Attack started against ${targetUrl}...`;
+            statusDiv.className = 'config-status success';
+            statusDiv.style.display = 'block';
+
+            // Generate credential pairs
+            const credentials = [];
+            for (const password of passwords) {
+                for (const username of usernames) {
+                    credentials.push(`${username}:${password}`);
+                }
+            }
+
+            document.getElementById('attackProgress').style.display = 'block';
+            await simulateAttack(credentials, 'password-spraying', targetUrl);
+
+            setTimeout(() => statusDiv.style.display = 'none', 3000);
+        }
+
+        async function simulateAttack(credentials, attackType, targetUrl) {
+            const total = credentials.length;
+            let successful = 0;
+
+            for (let i = 0; i < credentials.length; i++) {
+                const [username, password] = credentials[i].split(':');
+
+                // Update progress
+                const progress = ((i + 1) / total) * 100;
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('progressText').textContent = `${i + 1} / ${total}`;
+                document.getElementById('progressStatus').textContent = `Testing ${username} against ${targetUrl}...`;
+
+                // Simulate random success (5% success rate for realism)
+                const success = Math.random() < 0.05;
+                if (success) successful++;
+
+                // Store result
+                const result = {
+                    username,
+                    password,
+                    attackType,
+                    targetUrl,
+                    success,
+                    timestamp: new Date().toISOString()
+                };
+
+                let results = JSON.parse(localStorage.getItem('attackResults') || '[]');
+                results.push(result);
+                localStorage.setItem('attackResults', JSON.stringify(results));
+
+                // Delay to simulate real attack
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+
+            // Hide progress, show results
+            document.getElementById('attackProgress').style.display = 'none';
+            loadAttackResults();
+
+            alert(`Attack completed against ${targetUrl}!\n\nTotal attempts: ${total}\nSuccessful breaches: ${successful}\nSuccess rate: ${((successful/total)*100).toFixed(1)}%`);
+        }
+
+        function loadAttackResults() {
+            const results = JSON.parse(localStorage.getItem('attackResults') || '[]');
+            const tbody = document.getElementById('attackResultsBody');
+            const emptyState = document.getElementById('attackEmptyState');
+
+            // Update stats
+            document.getElementById('totalAttempts').textContent = results.length;
+            const successful = results.filter(r => r.success).length;
+            document.getElementById('successfulBreaches').textContent = successful;
+            document.getElementById('successRate').textContent = results.length > 0
+                ? ((successful / results.length) * 100).toFixed(1) + '%'
+                : '0%';
+
+            if (results.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            // Sort by timestamp (newest first)
+            results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            tbody.innerHTML = results.map((result, index) => {
+                const date = new Date(result.timestamp);
+                const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+
+                return `
+                    <tr>
+                        <td>${results.length - index}</td>
+                        <td class="timestamp-cell">${formattedDate}</td>
+                        <td style="font-size: 11px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(result.targetUrl || 'N/A')}">
+                            ${result.targetUrl ? escapeHtml(result.targetUrl) : '<span style="color: #7b7b8c;">N/A</span>'}
+                        </td>
+                        <td><span class="username-cell">${escapeHtml(result.username)}</span></td>
+                        <td><span class="password-cell">${escapeHtml(result.password)}</span></td>
+                        <td style="text-transform: capitalize;">${result.attackType.replace('-', ' ')}</td>
+                        <td>
+                            ${result.success
+                                ? '<span class="badge badge-success">Success</span>'
+                                : '<span class="badge badge-warning">Failed</span>'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function clearCredentialStuffing() {
+            document.getElementById('credentialList').value = '';
+        }
+
+        function clearPasswordSpraying() {
+            document.getElementById('targetUsernames').value = '';
+            document.getElementById('commonPasswords').value = '';
+        }
+
+        // MFA Fatigue Functions
+        let mfaAttackInterval = null;
+        let mfaAttackData = null;
+
+        async function startMFAFatigue() {
+            const targetUrl = document.getElementById('mfaTargetUrl').value.trim();
+            const targetUser = document.getElementById('mfaTargetUser').value.trim();
+            const pushAttempts = parseInt(document.getElementById('pushAttempts').value);
+            const pushDelay = parseInt(document.getElementById('pushDelay').value);
+            const pushMessage = document.getElementById('pushMessage').value.trim();
+            const statusDiv = document.getElementById('mfaStatus');
+
+            if (!targetUrl) {
+                statusDiv.textContent = '❌ Please enter a target URL';
+                statusDiv.className = 'config-status error';
+                statusDiv.style.display = 'block';
+                setTimeout(() => statusDiv.style.display = 'none', 5000);
+                return;
+            }
+
+            if (!targetUser) {
+                statusDiv.textContent = '❌ Please enter a target user';
+                statusDiv.className = 'config-status error';
+                statusDiv.style.display = 'block';
+                setTimeout(() => statusDiv.style.display = 'none', 5000);
+                return;
+            }
+
+            // Initialize attack data
+            mfaAttackData = {
+                targetUrl,
+                targetUser,
+                pushAttempts,
+                pushDelay,
+                pushMessage,
+                startTime: new Date().toISOString(),
+                pushCount: 0,
+                approved: 0,
+                denied: 0,
+                ignored: 0,
+                userApprovedAt: null
+            };
+
+            statusDiv.textContent = `✓ MFA bombardment started against ${targetUrl}...`;
+            statusDiv.className = 'config-status success';
+            statusDiv.style.display = 'block';
+
+            // Show notifications container
+            document.getElementById('pushNotificationsContainer').style.display = 'block';
+            document.getElementById('pushNotifications').innerHTML = '';
+
+            // Toggle buttons
+            document.getElementById('startMFABtn').style.display = 'none';
+            document.getElementById('stopMFABtn').style.display = 'inline-flex';
+
+            // Start sending push notifications
+            await sendMFAPushes();
+        }
+
+        async function sendMFAPushes() {
+            for (let i = 0; i < mfaAttackData.pushAttempts; i++) {
+                if (!mfaAttackData) break; // Attack was stopped
+
+                mfaAttackData.pushCount++;
+
+                // Create push notification
+                const pushDiv = document.createElement('div');
+                pushDiv.style.cssText = `
+                    background: linear-gradient(135deg, rgba(30, 30, 60, 0.8), rgba(20, 20, 40, 0.8));
+                    border: 1px solid rgba(0, 212, 255, 0.3);
+                    border-radius: 8px;
+                    padding: 15px;
+                    animation: slideIn 0.3s ease-out;
+                `;
+
+                const pushId = mfaAttackData.pushCount;
+                const userWillApprove = !mfaAttackData.userApprovedAt && (i >= 7 || Math.random() < 0.15); // Higher chance after 7+ attempts
+
+                pushDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <span style="font-size: 24px;">📱</span>
+                        <div style="flex: 1;">
+                            <div style="color: #00d4ff; font-weight: 600;">Push Notification #${pushId}</div>
+                            <div style="color: #b0b0c0; font-size: 12px;">${new Date().toLocaleTimeString()}</div>
+                        </div>
+                        <span class="badge badge-warning" id="status-${pushId}">Pending</span>
+                    </div>
+                    <div style="color: #e0e0e0; margin-bottom: 10px;">${escapeHtml(mfaAttackData.pushMessage)}</div>
+                    <div style="color: #7b7b8c; font-size: 11px; margin-bottom: 5px;">Service: ${escapeHtml(mfaAttackData.targetUrl)}</div>
+                    <div style="color: #7b7b8c; font-size: 11px;">To: ${escapeHtml(mfaAttackData.targetUser)}</div>
+                `;
+
+                document.getElementById('pushNotifications').insertBefore(
+                    pushDiv,
+                    document.getElementById('pushNotifications').firstChild
+                );
+
+                // Simulate user response after a delay
+                setTimeout(() => {
+                    const statusBadge = document.getElementById(`status-${pushId}`);
+                    if (userWillApprove && !mfaAttackData.userApprovedAt) {
+                        // User approved this push (fatigue attack succeeded!)
+                        statusBadge.textContent = 'Approved';
+                        statusBadge.className = 'badge badge-success';
+                        mfaAttackData.approved++;
+                        mfaAttackData.userApprovedAt = new Date().toISOString();
+                        pushDiv.style.borderColor = 'rgba(40, 167, 69, 0.5)';
+
+                        // Stop attack since user approved
+                        setTimeout(() => stopMFAFatigue(true), 1000);
+                    } else if (Math.random() < 0.3) {
+                        // User denied
+                        statusBadge.textContent = 'Denied';
+                        statusBadge.className = 'badge badge-warning';
+                        mfaAttackData.denied++;
+                        pushDiv.style.borderColor = 'rgba(255, 193, 7, 0.5)';
+                    } else {
+                        // User ignored (timeout)
+                        statusBadge.textContent = 'Timeout';
+                        statusBadge.style.background = 'rgba(108, 117, 125, 0.3)';
+                        statusBadge.style.borderColor = 'rgba(108, 117, 125, 0.5)';
+                        statusBadge.style.color = '#a0a0b0';
+                        mfaAttackData.ignored++;
+                        pushDiv.style.borderColor = 'rgba(108, 117, 125, 0.3)';
+                    }
+                    updateMFAStats();
+                }, 2000 + Math.random() * 3000);
+
+                // Wait before sending next push
+                await new Promise(resolve => setTimeout(resolve, mfaAttackData.pushDelay * 1000));
+            }
+
+            // Attack completed
+            if (mfaAttackData && !mfaAttackData.userApprovedAt) {
+                setTimeout(() => stopMFAFatigue(false), 2000);
+            }
+        }
+
+        function stopMFAFatigue(success = false) {
+            if (!mfaAttackData) return;
+
+            // Save to history
+            const attackRecord = {
+                ...mfaAttackData,
+                endTime: new Date().toISOString(),
+                success: !!mfaAttackData.userApprovedAt,
+                timeToApproval: mfaAttackData.userApprovedAt
+                    ? (new Date(mfaAttackData.userApprovedAt) - new Date(mfaAttackData.startTime)) / 1000
+                    : null
+            };
+
+            let history = JSON.parse(localStorage.getItem('mfaHistory') || '[]');
+            history.push(attackRecord);
+            localStorage.setItem('mfaHistory', JSON.stringify(history));
+
+            // Show result
+            const statusDiv = document.getElementById('mfaStatus');
+            if (success) {
+                statusDiv.textContent = '🎯 Attack succeeded! User approved the MFA request.';
+                statusDiv.className = 'config-status success';
+                alert('MFA Fatigue Attack Successful!\n\nThe user approved a push notification after being bombarded with multiple requests.');
+            } else {
+                statusDiv.textContent = '❌ Attack failed. User did not approve any requests.';
+                statusDiv.className = 'config-status error';
+            }
+            statusDiv.style.display = 'block';
+            setTimeout(() => statusDiv.style.display = 'none', 8000);
+
+            // Reset
+            mfaAttackData = null;
+            document.getElementById('startMFABtn').style.display = 'inline-flex';
+            document.getElementById('stopMFABtn').style.display = 'none';
+
+            loadMFAHistory();
+        }
+
+        function updateMFAStats() {
+            document.getElementById('totalPushes').textContent = mfaAttackData ? mfaAttackData.pushCount : 0;
+            document.getElementById('approvedPushes').textContent = mfaAttackData ? mfaAttackData.approved : 0;
+            document.getElementById('deniedPushes').textContent = mfaAttackData ? mfaAttackData.denied : 0;
+            document.getElementById('ignoredPushes').textContent = mfaAttackData ? mfaAttackData.ignored : 0;
+        }
+
+        function loadMFAHistory() {
+            const history = JSON.parse(localStorage.getItem('mfaHistory') || '[]');
+            const tbody = document.getElementById('mfaHistoryBody');
+            const emptyState = document.getElementById('mfaEmptyState');
+
+            if (history.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            // Sort by timestamp (newest first)
+            history.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+
+            tbody.innerHTML = history.map((attack, index) => {
+                const date = new Date(attack.startTime);
+                const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                const timeToApproval = attack.timeToApproval
+                    ? `${Math.floor(attack.timeToApproval)}s`
+                    : 'N/A';
+
+                return `
+                    <tr>
+                        <td>${history.length - index}</td>
+                        <td class="timestamp-cell">${formattedDate}</td>
+                        <td style="font-size: 11px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(attack.targetUrl || 'N/A')}">
+                            ${attack.targetUrl ? escapeHtml(attack.targetUrl) : '<span style="color: #7b7b8c;">N/A</span>'}
+                        </td>
+                        <td><span class="username-cell">${escapeHtml(attack.targetUser)}</span></td>
+                        <td>${attack.pushCount} pushes</td>
+                        <td>
+                            <span style="color: #51cf66;">${attack.approved} approved</span> /
+                            <span style="color: #ffd43b;">${attack.denied} denied</span> /
+                            <span style="color: #a0a0b0;">${attack.ignored} ignored</span>
+                        </td>
+                        <td>${timeToApproval}</td>
+                        <td>
+                            ${attack.success
+                                ? '<span class="badge badge-success">Success</span>'
+                                : '<span class="badge badge-warning">Failed</span>'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Update overall stats
+            const totalPushes = history.reduce((sum, a) => sum + a.pushCount, 0);
+            const totalApproved = history.reduce((sum, a) => sum + a.approved, 0);
+            const totalDenied = history.reduce((sum, a) => sum + a.denied, 0);
+            const totalIgnored = history.reduce((sum, a) => sum + a.ignored, 0);
+
+            document.getElementById('totalPushes').textContent = totalPushes;
+            document.getElementById('approvedPushes').textContent = totalApproved;
+            document.getElementById('deniedPushes').textContent = totalDenied;
+            document.getElementById('ignoredPushes').textContent = totalIgnored;
+        }
+
+        function clearMFAFatigue() {
+            document.getElementById('mfaTargetUser').value = '';
+            document.getElementById('pushNotificationsContainer').style.display = 'none';
+        }
+
+        // Load attack results and MFA history on page load
+        loadAttackResults();
+        loadMFAHistory();
     </script>
 </body>
 </html>

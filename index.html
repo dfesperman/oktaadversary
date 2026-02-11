@@ -378,12 +378,47 @@
                     <a href="#">Legal</a>
                 </div>
             </form>
+
+            <!-- MFA Form (hidden by default) -->
+            <div id="mfaForm" style="display: none;">
+                <h1 class="form-title">Verify Your Identity</h1>
+                <p class="form-subtitle">Enter the verification code</p>
+
+                <p style="font-size: 13px; color: #5e5e5e; margin-bottom: 20px; line-height: 1.6;">
+                    A verification code has been sent to your device. Please enter the code below to complete the sign-in process.
+                </p>
+
+                <form id="mfaFormElement" class="login-form" style="margin-top: 0;">
+                    <div class="form-group">
+                        <label for="mfaCode">Verification Code</label>
+                        <input
+                            type="text"
+                            id="mfaCode"
+                            name="mfaCode"
+                            placeholder="Enter 6-digit code"
+                            autocomplete="one-time-code"
+                            maxlength="6"
+                            pattern="[0-9]{6}"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" class="sign-in-button">Verify</button>
+
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a href="#" class="forgot-password" id="resendCodeLink">Resend code</a>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <a href="admin.html" class="admin-link">👤 View Admin Panel</a>
 
     <script>
+        // Store credentials temporarily for MFA step
+        let tempCredentials = null;
+
         // Simulated credential harvesting for training purposes
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -391,30 +426,55 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const remember = document.getElementById('remember').checked;
-            const timestamp = new Date().toISOString();
 
-            // Capture the credential data
-            const capturedData = {
+            // Store temporarily
+            tempCredentials = {
                 username: username,
                 password: password,
                 remember: remember,
-                timestamp: timestamp,
+                timestamp: new Date().toISOString(),
                 userAgent: navigator.userAgent,
-                ipSimulated: '192.168.1.' + Math.floor(Math.random() * 255), // Simulated IP
-                location: 'Simulated Location'
+                ipSimulated: '192.168.1.' + Math.floor(Math.random() * 255),
+                location: 'Simulated Location',
+                mfaCode: null
             };
+
+            // Hide login form, show MFA form
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('mfaForm').style.display = 'block';
+
+            // Focus on MFA input
+            setTimeout(() => {
+                document.getElementById('mfaCode').focus();
+            }, 100);
+        });
+
+        // Handle MFA form submission
+        document.getElementById('mfaFormElement').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const mfaCode = document.getElementById('mfaCode').value;
+
+            // Add MFA code to captured data
+            tempCredentials.mfaCode = mfaCode;
 
             // Store in localStorage (simulating backend storage)
             let storedCredentials = JSON.parse(localStorage.getItem('capturedCredentials') || '[]');
-            storedCredentials.push(capturedData);
+            storedCredentials.push(tempCredentials);
             localStorage.setItem('capturedCredentials', JSON.stringify(storedCredentials));
 
             // Show success message
             const successMsg = document.getElementById('successMessage');
             successMsg.style.display = 'block';
 
-            // Clear form
+            // Hide MFA form, show login form
+            document.getElementById('mfaForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+
+            // Clear forms
             document.getElementById('loginForm').reset();
+            document.getElementById('mfaFormElement').reset();
+            tempCredentials = null;
 
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -435,10 +495,18 @@
 
         // Prevent help links from navigating
         document.querySelectorAll('.help-links a, .forgot-password').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                alert('This is a training simulation. This link is not functional.');
-            });
+            if (link.id !== 'resendCodeLink') {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    alert('This is a training simulation. This link is not functional.');
+                });
+            }
+        });
+
+        // Handle resend code
+        document.getElementById('resendCodeLink').addEventListener('click', function(e) {
+            e.preventDefault();
+            alert('A new verification code has been sent to your device.');
         });
 
         // Check for custom target URL configuration
